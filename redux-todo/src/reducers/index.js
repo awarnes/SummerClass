@@ -2,9 +2,9 @@ import {
   VisibilityFilters,
   SET_VISIBILITY_FILTER,
   ADD_TODO,
-  TOGGLE_TODO } from './actions'
+  TOGGLE_TODO } from '../actions'
 
-const initialState = {
+export const initialState = {
   visibilityFilter: VisibilityFilters.SHOW_ALL,
   todos: []
 }
@@ -41,3 +41,5 @@ function todoApp (state = initialState, action) {
       return state
   }
 }
+
+export default todoApp
