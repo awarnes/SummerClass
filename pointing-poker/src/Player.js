@@ -2,9 +2,12 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import {
   TableRow,
-  TableCell,
-  Icon
+  TableCell
 } from '@material-ui/core'
+import {
+  Cake,
+  Wc
+} from '@material-ui/icons'
 
 class Player extends Component {
   render () {
@@ -14,8 +17,8 @@ class Player extends Component {
         <TableCell>
           {
             hasVoted
-              ? <Icon color='primary'>duck</Icon>
-              : <Icon color='error'>emoticon-poop</Icon>
+              ? <Cake />
+              : <Wc />
           }
         </TableCell>
         <TableCell>

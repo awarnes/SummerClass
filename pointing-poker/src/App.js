@@ -2,6 +2,10 @@ import React, { Component } from 'react'
 import { TextField, Card, CardHeader } from '@material-ui/core'
 import ButtonGrid from './ButtonGrid'
 import PlayerList from './PlayerList'
+import { jwtClient } from './auth'
+
+const FIREBASE_ENDPOINT = 'https://pointing-poker-class-2018.firebaseio.com'
+
 class App extends Component {
   constructor (props) {
     super(props)
@@ -13,8 +17,27 @@ class App extends Component {
           isPlayer: true,
           hasVoted: false
         }] 
-      
     }
+  }
+
+  componentDidMount () {
+    fetch(`${FIREBASE_ENDPOINT}/users.json`)
+      .then(resp => resp.json())
+      .then(json => {
+        console.log(json)
+        this.setState({players: json})
+      })
+      .catch(err => console.error("This is error: ", Error(err)))
+
+      jwtClient.authorize(((err, tokens) => {
+        if (err) {
+          throw new Error(err)
+        } else if (tokens.access_token === null) {
+          throw new Error("Y'all don't have access!")
+        } else {
+          const accessToken = tokens.access_token
+        }
+      }))
   }
 
   updateDescription = (evt) => {

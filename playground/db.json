@@ -1,0 +1,22 @@
+{
+  "users": [
+    {
+      "points": "",
+      "name": "Garth",
+      "isPlayer": true,
+      "hasVoted": false
+    },
+    {
+      "points": "",
+      "name": "Billy",
+      "isPlayer": true,
+      "hasVoted": false
+    },
+    {
+      "points": "",
+      "name": "John",
+      "isPlayer": true,
+      "hasVoted": false
+    }
+  ]
+}
