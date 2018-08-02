@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { TextField, Card, CardHeader } from '@material-ui/core'
 import ButtonGrid from './ButtonGrid'
 import PlayerList from './PlayerList'
-import fireApp from './firebase'
+import fireApp from '../firebase'
 class App extends Component {
   constructor (props) {
     super(props)
