@@ -3,6 +3,8 @@ import { TextField, Card, CardHeader } from '@material-ui/core'
 import ButtonGrid from './ButtonGrid'
 import PlayerList from './PlayerList'
 import fireApp from '../firebase'
+import firebase from 'firebase'
+
 class App extends Component {
   constructor (props) {
     super(props)
@@ -48,8 +50,9 @@ class App extends Component {
   }
 
   authUser = () => {
-    fireApp.auth().signInAnonymously()
-      .catch(err => console.error(Error(err)))
+    fireApp.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
+    .then(() => fireApp.auth().signInAnonymously())
+    .catch(err => console.error(Error(err)))
   }
 
   updateDescription = (evt) => {

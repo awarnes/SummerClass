@@ -1,22 +1,19 @@
 {
-  "users": [
-    {
+  "users": {
+    "specialKey": {
       "points": "",
       "name": "Garth",
-      "isPlayer": true,
       "hasVoted": false
     },
-    {
+    "uniqueKey": {
       "points": "",
       "name": "Billy",
-      "isPlayer": true,
       "hasVoted": false
     },
-    {
+    "onlyKey": {
       "points": "",
       "name": "John",
-      "isPlayer": true,
       "hasVoted": false
     }
-  ]
+  }
 }
