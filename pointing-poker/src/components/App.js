@@ -18,7 +18,7 @@ class App extends Component {
   }
 
   componentDidMount () {
-    fireApp.auth().onAuthStateChanged(user => {
+    firebase.auth().onAuthStateChanged(user => {
       if (user && this.state.userName) {
         fireApp.database().ref(`users/${user.uid}`).set({
           points: '',
@@ -47,12 +47,41 @@ class App extends Component {
           .catch((err) => console.error("This is error: ", Error(err)))
       }
     })
+
+    fireApp.database().ref('users/').on('value', this.updatePlayers)
+  }
+
+  componentWillUnmount () {
+    fireApp.database().ref('users/').off(this.updatePlayers)
+  }
+
+  updatePlayers = (snapshot) => {
+    this.setState({
+      players: snapshot.val()
+    })
   }
 
   authUser = () => {
-    fireApp.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
-    .then(() => fireApp.auth().signInAnonymously())
+    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
+    .then(() => firebase.auth().signInAnonymously())
     .catch(err => console.error(Error(err)))
+  }
+
+  signOut = () => {
+    const {activePlayer} = this.state
+    firebase.auth().currentUser.delete()
+      .then((snapshot) => {
+        this.setState({
+          userActive: false,
+          userName: '',
+          activePlayer: '',
+        })
+      })
+      .then(() => {
+        return fireApp.database().ref('users/' + activePlayer).remove()
+      })
+      
+      .catch(err => console.error(Error(err)))
   }
 
   updateDescription = (evt) => {
@@ -70,8 +99,10 @@ class App extends Component {
     var newPlayers = Object.assign(...editPlayers.map(player => {
       return { [player[0]]: player[1] }
     }))
-
-    this.setState({players: newPlayers})
+    
+    fireApp.database().ref(`users/${this.state.activePlayer}/points`).set({
+      points
+    })
   }
 
   updateUserName = (evt) => {
@@ -79,8 +110,7 @@ class App extends Component {
   }
 
   render () {
-    const { descriptionText, userActive, userName, activePlayer } = this.state
-
+    const { descriptionText, userActive, userName, activePlayer, players } = this.state
     return (
       <div>
         {userActive ?
@@ -88,7 +118,7 @@ class App extends Component {
             <div>
               <Card>
                 <CardHeader
-                  title={this.state.players[activePlayer].name}
+                  title={players[activePlayer].name}
                 />
                 <TextField
                   rows={2}
@@ -98,6 +128,7 @@ class App extends Component {
                   onChange={this.updateDescription}
                 />
               </Card>
+              <button onClick={this.signOut}>SIGN OUT</button>
               <div>
                 <div>
                   <ButtonGrid
