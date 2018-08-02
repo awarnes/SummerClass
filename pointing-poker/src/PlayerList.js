@@ -8,11 +8,11 @@ import {
 
 class PlayerList extends Component {
   render () {
-    const players = this.props.players.map(player => {
+    const players = Object.entries(this.props.players).map(player => {
       return (
         <Player
-          key={`${player.points}${player.name}`}
-          player={player}
+          key={player[0]}
+          player={player[1]}
         />
       )
     })
@@ -29,5 +29,5 @@ class PlayerList extends Component {
 export default PlayerList
 
 PlayerList.propTypes = {
-  players: PropTypes.array.isRequired
+  players: PropTypes.object.isRequired
 }

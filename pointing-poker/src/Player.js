@@ -11,12 +11,12 @@ import {
 
 class Player extends Component {
   render () {
-    const { hasVoted, name, points, isPlayer } = this.props.player
+    const { name, points } = this.props.player
     return (
       <TableRow>
         <TableCell>
           {
-            hasVoted
+            points
               ? <Cake />
               : <Wc />
           }
@@ -25,7 +25,7 @@ class Player extends Component {
           {name}
         </TableCell>
         <TableCell>
-          {isPlayer && points}
+          {points}
         </TableCell>
       </TableRow>
     )

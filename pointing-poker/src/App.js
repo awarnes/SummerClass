@@ -2,42 +2,54 @@ import React, { Component } from 'react'
 import { TextField, Card, CardHeader } from '@material-ui/core'
 import ButtonGrid from './ButtonGrid'
 import PlayerList from './PlayerList'
-import { jwtClient } from './auth'
-
-const FIREBASE_ENDPOINT = 'https://pointing-poker-class-2018.firebaseio.com'
-
+import fireApp from './firebase'
 class App extends Component {
   constructor (props) {
     super(props)
     this.state = {
       descriptionText: '',
-      players: [{
-          points: '',
-          name: 'Garth',
-          isPlayer: true,
-          hasVoted: false
-        }] 
+      players: {},
+      userActive: false,
+      userName: '',
+      activePlayer: ''
     }
   }
 
   componentDidMount () {
-    fetch(`${FIREBASE_ENDPOINT}/users.json`)
-      .then(resp => resp.json())
-      .then(json => {
-        console.log(json)
-        this.setState({players: json})
-      })
-      .catch(err => console.error("This is error: ", Error(err)))
+    fireApp.auth().onAuthStateChanged(user => {
+      if (user && this.state.userName) {
+        fireApp.database().ref(`users/${user.uid}`).set({
+          points: '',
+          name: this.state.userName
+        })
+          .then(() => fireApp.database().ref('users/').once('value'))
+          .then(snapshot => snapshot.val())
+          .then(data => {
+            this.setState({
+              players: data,
+              userActive: true,
+              activePlayer: user.uid 
+            })
+          })
+          .catch((err) => console.error("This is error: ", Error(err)))
+      } else if (user) {
+        fireApp.database().ref('users/').once('value')
+          .then(snapshot => snapshot.val())
+          .then(data => {
+            this.setState({
+              players: data,
+              userActive: true,
+              activePlayer: user.uid 
+            })
+          })
+          .catch((err) => console.error("This is error: ", Error(err)))
+      }
+    })
+  }
 
-      jwtClient.authorize(((err, tokens) => {
-        if (err) {
-          throw new Error(err)
-        } else if (tokens.access_token === null) {
-          throw new Error("Y'all don't have access!")
-        } else {
-          const accessToken = tokens.access_token
-        }
-      }))
+  authUser = () => {
+    fireApp.auth().signInAnonymously()
+      .catch(err => console.error(Error(err)))
   }
 
   updateDescription = (evt) => {
@@ -45,59 +57,81 @@ class App extends Component {
   }
 
   updatePoints = (points) => {
-    const newPlayers = this.state.players.map(player => {
-      if(player.isPlayer) {
-        player.points = points
-        player.hasVoted = true
+    const editPlayers = Object.entries(this.state.players).map(player => {
+      if (player[0] === this.state.activePlayer) {
+        player[1].points = points
       }
       return player
     })
+
+    var newPlayers = Object.assign(...editPlayers.map(player => {
+      return { [player[0]]: player[1] }
+    }))
+
     this.setState({players: newPlayers})
   }
 
+  updateUserName = (evt) => {
+    this.setState({userName: evt.target.value})
+  }
+
   render () {
-    const { descriptionText } = this.state
+    const { descriptionText, userActive, userName, activePlayer } = this.state
 
     return (
       <div>
-        <div>
-          <Card>
-            <CardHeader
-              title="Name Go Here"
-            />
-            <TextField
-              rows={2}
-              label='Story Description'
-              multiline
-              value={descriptionText}
-              onChange={this.updateDescription}
-            />
-          </Card>
+        {userActive ?
           <div>
             <div>
-              <ButtonGrid
-                updatePoints={this.updatePoints}
-              />
+              <Card>
+                <CardHeader
+                  title={this.state.players[activePlayer].name}
+                />
+                <TextField
+                  rows={2}
+                  label='Story Description'
+                  multiline
+                  value={descriptionText}
+                  onChange={this.updateDescription}
+                />
+              </Card>
+              <div>
+                <div>
+                  <ButtonGrid
+                    updatePoints={this.updatePoints}
+                  />
+                </div>
+                <div>
+                  <PlayerList players={this.state.players}/>
+                </div>
+              </div>
             </div>
-            <div>
-              <PlayerList players={this.state.players}/>
-              <p>Player 1: {this.state.players[0].points}</p>
-            </div>
-          </div>
-        </div>
 
-        <div>
-          <div>
-            <h1>Statistics</h1>
-            <p>Total Time:</p>
-            <p>Average:</p>
-            <p>Breakdown:</p>
+            <div>
+              <div>
+                <h1>Statistics</h1>
+                <p>Total Time:</p>
+                <p>Average:</p>
+                <p>Breakdown:</p>
+              </div>
+              <div>
+                <button>Show Votes</button>
+                <button>Clear Votes</button>
+              </div>
+            </div>
           </div>
+        :
           <div>
-            <button>Show Votes</button>
-            <button>Clear Votes</button>
+            <TextField
+                  label='Enter name'
+                  value={userName}
+                  onChange={this.updateUserName}
+                />
+            <button
+              onClick={this.authUser}
+            >Join Session</button>
           </div>
-        </div>
+        }
       </div>
     )
   }
