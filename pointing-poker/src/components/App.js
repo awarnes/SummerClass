@@ -18,7 +18,7 @@ class App extends Component {
   }
 
   componentDidMount () {
-    fireApp.auth().onAuthStateChanged(user => {
+    firebase.auth().onAuthStateChanged(user => {
       if (user && this.state.userName) {
         fireApp.database().ref(`users/${user.uid}`).set({
           points: '',
@@ -50,9 +50,24 @@ class App extends Component {
   }
 
   authUser = () => {
-    fireApp.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
-    .then(() => fireApp.auth().signInAnonymously())
+    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
+    .then(() => firebase.auth().signInAnonymously())
     .catch(err => console.error(Error(err)))
+  }
+
+  signOut = () => {
+    firebase.auth().currentUser.delete()
+      .then(() => {
+        return fireApp.database().ref('users/' + this.state.activePlayer).remove()
+      })
+      .then(() => {
+        this.setState({
+          userActive: false,
+          userName: '',
+          activePlayer: ''
+        })
+      })
+      .catch(err => console.error(Error(err)))
   }
 
   updateDescription = (evt) => {
@@ -98,6 +113,7 @@ class App extends Component {
                   onChange={this.updateDescription}
                 />
               </Card>
+              <button onClick={this.signOut}>SIGN OUT</button>
               <div>
                 <div>
                   <ButtonGrid
