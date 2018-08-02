@@ -47,6 +47,18 @@ class App extends Component {
           .catch((err) => console.error("This is error: ", Error(err)))
       }
     })
+
+    fireApp.database().ref('users/').on('value', this.updatePlayers)
+  }
+
+  componentWillUnmount () {
+    fireApp.database().ref('users/').off(this.updatePlayers)
+  }
+
+  updatePlayers = (snapshot) => {
+    this.setState({
+      players: snapshot.val()
+    })
   }
 
   authUser = () => {
@@ -56,17 +68,19 @@ class App extends Component {
   }
 
   signOut = () => {
+    const {activePlayer} = this.state
     firebase.auth().currentUser.delete()
-      .then(() => {
-        return fireApp.database().ref('users/' + this.state.activePlayer).remove()
-      })
-      .then(() => {
+      .then((snapshot) => {
         this.setState({
           userActive: false,
           userName: '',
-          activePlayer: ''
+          activePlayer: '',
         })
       })
+      .then(() => {
+        return fireApp.database().ref('users/' + activePlayer).remove()
+      })
+      
       .catch(err => console.error(Error(err)))
   }
 
@@ -85,8 +99,10 @@ class App extends Component {
     var newPlayers = Object.assign(...editPlayers.map(player => {
       return { [player[0]]: player[1] }
     }))
-
-    this.setState({players: newPlayers})
+    
+    fireApp.database().ref(`users/${this.state.activePlayer}/points`).set({
+      points
+    })
   }
 
   updateUserName = (evt) => {
@@ -94,8 +110,7 @@ class App extends Component {
   }
 
   render () {
-    const { descriptionText, userActive, userName, activePlayer } = this.state
-
+    const { descriptionText, userActive, userName, activePlayer, players } = this.state
     return (
       <div>
         {userActive ?
@@ -103,7 +118,7 @@ class App extends Component {
             <div>
               <Card>
                 <CardHeader
-                  title={this.state.players[activePlayer].name}
+                  title={players[activePlayer].name}
                 />
                 <TextField
                   rows={2}
