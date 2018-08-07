@@ -13,6 +13,7 @@ class PlayerList extends Component {
         <Player
           key={player[0]}
           player={player[1]}
+          activeUid={this.props.activeUid === player[0] || this.props.showVotes}
         />
       )
     })
@@ -29,5 +30,7 @@ class PlayerList extends Component {
 export default PlayerList
 
 PlayerList.propTypes = {
-  players: PropTypes.object.isRequired
+  players: PropTypes.object.isRequired,
+  activeUid: PropTypes.string.isRequired,
+  showVotes: PropTypes.bool.isRequired
 }

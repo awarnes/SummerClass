@@ -4,7 +4,13 @@ import ButtonGrid from './ButtonGrid'
 import PlayerList from './PlayerList'
 import fireApp from '../firebase'
 import firebase from 'firebase'
-
+import {
+  BrowserRouter as Router,
+  Route,
+  Redirect
+} from 'react-router-dom'
+import PlayerSignIn from './PlayerSignIn';
+import Game from './Game'
 class App extends Component {
   constructor (props) {
     super(props)
@@ -13,27 +19,30 @@ class App extends Component {
       players: {},
       userActive: false,
       userName: '',
-      activePlayer: ''
+      activeUid: '',
+      showVotes: false
     }
   }
 
   componentDidMount () {
     firebase.auth().onAuthStateChanged(user => {
+      console.error(user)
       if (user && this.state.userName) {
+        console.error(this.state.userName)
         fireApp.database().ref(`users/${user.uid}`).set({
           points: '',
           name: this.state.userName
         })
-          .then(() => fireApp.database().ref('users/').once('value'))
-          .then(snapshot => snapshot.val())
-          .then(data => {
-            this.setState({
-              players: data,
-              userActive: true,
-              activePlayer: user.uid 
-            })
+        .then(() => fireApp.database().ref('users/').once('value'))
+        .then(snapshot => snapshot.val())
+        .then(data => {
+          this.setState({
+            players: data,
+            userActive: true,
+            activeUid: user.uid 
           })
-          .catch((err) => console.error("This is error: ", Error(err)))
+        })
+        .catch((err) => console.error("This is error: ", Error(err)))
       } else if (user) {
         fireApp.database().ref('users/').once('value')
           .then(snapshot => snapshot.val())
@@ -41,7 +50,7 @@ class App extends Component {
             this.setState({
               players: data,
               userActive: true,
-              activePlayer: user.uid 
+              activeUid: user.uid 
             })
           })
           .catch((err) => console.error("This is error: ", Error(err)))
@@ -49,6 +58,11 @@ class App extends Component {
     })
 
     fireApp.database().ref('users/').on('value', this.updatePlayers)
+    fireApp.database().ref('showVotes/').on('value', (snapshot) => {
+      this.setState({
+        showVotes: snapshot.val()
+      })
+    })
   }
 
   componentWillUnmount () {
@@ -63,22 +77,22 @@ class App extends Component {
 
   authUser = () => {
     firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
-    .then(() => firebase.auth().signInAnonymously())
-    .catch(err => console.error(Error(err)))
+      .then(() => firebase.auth().signInAnonymously())
+      .catch(err => console.error(Error(err)))
   }
 
   signOut = () => {
-    const {activePlayer} = this.state
+    const {activeUid} = this.state
     firebase.auth().currentUser.delete()
       .then((snapshot) => {
         this.setState({
           userActive: false,
           userName: '',
-          activePlayer: '',
+          activeUid: '',
         })
       })
       .then(() => {
-        return fireApp.database().ref('users/' + activePlayer).remove()
+        return fireApp.database().ref('users/' + activeUid).remove()
       })
       
       .catch(err => console.error(Error(err)))
@@ -88,21 +102,23 @@ class App extends Component {
     this.setState({descriptionText: evt.target.value})
   }
 
-  updatePoints = (points) => {
-    const editPlayers = Object.entries(this.state.players).map(player => {
-      if (player[0] === this.state.activePlayer) {
-        player[1].points = points
-      }
-      return player
+  showVotes = () => {
+    this.setState({showVotes: !this.state.showVotes}, () => {
+      fireApp.database().ref('showVotes/').set(this.state.showVotes)
     })
+  }
+  clearVotes = () => {
+    const updates = {}
+    Object.keys(this.state.players).forEach((uid) => {
+      updates[`users/${uid}/points`] = ''
+    })
+    updates['showVotes/'] = false
+    console.error(updates)
+    fireApp.database().ref().update(updates)
+  }
 
-    var newPlayers = Object.assign(...editPlayers.map(player => {
-      return { [player[0]]: player[1] }
-    }))
-    
-    fireApp.database().ref(`users/${this.state.activePlayer}/points`).set({
-      points
-    })
+  updatePoints = (points) => {
+    fireApp.database().ref(`users/${this.state.activeUid}/points`).set(points)
   }
 
   updateUserName = (evt) => {
@@ -110,63 +126,36 @@ class App extends Component {
   }
 
   render () {
-    const { descriptionText, userActive, userName, activePlayer, players } = this.state
+    const { descriptionText, userActive, userName, activeUid, players, showVotes } = this.state
     return (
-      <div>
-        {userActive ?
-          <div>
-            <div>
-              <Card>
-                <CardHeader
-                  title={players[activePlayer].name}
-                />
-                <TextField
-                  rows={2}
-                  label='Story Description'
-                  multiline
-                  value={descriptionText}
-                  onChange={this.updateDescription}
-                />
-              </Card>
-              <button onClick={this.signOut}>SIGN OUT</button>
-              <div>
-                <div>
-                  <ButtonGrid
-                    updatePoints={this.updatePoints}
-                  />
-                </div>
-                <div>
-                  <PlayerList players={this.state.players}/>
-                </div>
-              </div>
-            </div>
+      <Router>
+        <div>
+          <Route exact path='/' render={(props) => {
+            return (userActive ? <Redirect to={'/game'} /> :
+            <PlayerSignIn
+              {...props}
+              userName={userName}
+              updateUserName={this.updateUserName}
+              authUser={this.authUser}
+            />)
+            }}/>
 
-            <div>
-              <div>
-                <h1>Statistics</h1>
-                <p>Total Time:</p>
-                <p>Average:</p>
-                <p>Breakdown:</p>
-              </div>
-              <div>
-                <button>Show Votes</button>
-                <button>Clear Votes</button>
-              </div>
-            </div>
-          </div>
-        :
-          <div>
-            <TextField
-                  label='Enter name'
-                  value={userName}
-                  onChange={this.updateUserName}
-                />
-            <button
-              onClick={this.authUser}
-            >Join Session</button>
-          </div>
-        }
-      </div>
+          <Route exact path='/game' render={(props) => (
+            <Game
+              {...props}
+              descriptionText={descriptionText}
+              activeUid={activeUid}
+              players={players}
+              showVotes={showVotes}
+              updatePoints={this.updatePoints}
+              updateDescription={this.updateDescription}
+              showVotesFunc={this.showVotes}
+              clearVotes={this.clearVotes}
+              signOut={this.signOut}
+            />)}
+          />
+        </div>
+      </Router>
     )
   }
 }

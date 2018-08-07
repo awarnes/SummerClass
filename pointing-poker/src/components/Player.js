@@ -25,7 +25,7 @@ class Player extends Component {
           {name}
         </TableCell>
         <TableCell>
-          {points}
+          {this.props.activeUid ? points : 'No Points for You!'}
         </TableCell>
       </TableRow>
     )
@@ -35,5 +35,6 @@ class Player extends Component {
 export default Player
 
 Player.propTypes = {
-  player: PropTypes.object.isRequired
+  player: PropTypes.object.isRequired,
+  activeUid: PropTypes.bool.isRequired
 }
