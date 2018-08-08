@@ -2,8 +2,9 @@
 
 # dependencies
 /node_modules
-.vs/
-.vscode/
+/.vs
+/.vscode
+
 # testing
 /coverage
 

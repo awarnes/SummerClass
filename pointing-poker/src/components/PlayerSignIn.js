@@ -7,11 +7,13 @@ class PlayerSignIn extends Component {
     return (
       <div>
         <TextField
+          id='userNameField'
           label='Enter name'
           value={this.props.userName}
           onChange={this.props.updateUserName}
         />
         <Button
+          id='authButton'
           onClick={this.props.authUser}
           variant="outlined"
         >Join Session</Button>
