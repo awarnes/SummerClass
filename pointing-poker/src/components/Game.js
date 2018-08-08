@@ -72,7 +72,7 @@ Game.propTypes = {
   players: PropTypes.object.isRequired,
   showVotes: PropTypes.bool.isRequired,
   updatePoints: PropTypes.func.isRequired,
-  updateDescription: PropTypes.func.isRequire,
+  updateDescription: PropTypes.func.isRequired,
   showVotesFunc: PropTypes.func.isRequired,
   clearVotes: PropTypes.func.isRequired,
   signOut: PropTypes.func.isRequired

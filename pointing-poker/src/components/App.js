@@ -1,7 +1,4 @@
 import React, { Component } from 'react'
-import { TextField, Card, CardHeader } from '@material-ui/core'
-import ButtonGrid from './ButtonGrid'
-import PlayerList from './PlayerList'
 import fireApp from '../firebase'
 import firebase from 'firebase'
 import {
@@ -26,9 +23,7 @@ class App extends Component {
 
   componentDidMount () {
     firebase.auth().onAuthStateChanged(user => {
-      console.error(user)
       if (user && this.state.userName) {
-        console.error(this.state.userName)
         fireApp.database().ref(`users/${user.uid}`).set({
           points: '',
           name: this.state.userName
@@ -113,7 +108,6 @@ class App extends Component {
       updates[`users/${uid}/points`] = ''
     })
     updates['showVotes/'] = false
-    console.error(updates)
     fireApp.database().ref().update(updates)
   }
 
@@ -140,7 +134,8 @@ class App extends Component {
             />)
             }}/>
 
-          <Route exact path='/game' render={(props) => (
+          <Route exact path='/game' render={(props) => {
+            return (userActive ?
             <Game
               {...props}
               descriptionText={descriptionText}
@@ -152,7 +147,10 @@ class App extends Component {
               showVotesFunc={this.showVotes}
               clearVotes={this.clearVotes}
               signOut={this.signOut}
-            />)}
+            />
+            :
+            <Redirect to={'/'} />
+          )}}
           />
         </div>
       </Router>
