@@ -13,13 +13,8 @@ describe('<PointButton />', () => {
   it('renders a button', () => {
     const shallow = createShallow()
     const wrapper = shallow(<PointButton {...props}/>)
-
-    expect(wrapper.contains(
-      <Button
-        size='small'
-        type='button'
-        onClick={() => { props.updatePoints(props.points) }}
-      />
-    )).toBe(true)
+    const button = wrapper.find(Button)
+    console.log(button)
+    expect(wrapper.contains(button)).toBe(true)
   })
 })
